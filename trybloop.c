@@ -3,27 +3,45 @@
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 512
 
+
+struct StreamCallbackData
+{
+  int frame;
+  float frequency;
+  float amplitude;
+} StreamCallbackData;
+
+
 int streamCallback(
               const void *inputBuffer,
               void *outputBuffer, 
               unsigned long framesPerBuffer,
               const PaStreamCallbackTimeInfo* timeInfo, 
               PaStreamCallbackFlags statusFlags,
-              void *data
+              void *inData
 )
 { 
               float *buffer = (float*)outputBuffer; 
+              struct StreamCallbackData *data = (struct StreamCallbackData*)inData;
+
+              float frequency = data->frequency;
+              float amplitude = data->amplitude;
+              
               for(int frame = 0; frame < framesPerBuffer; frame++)
               {
-                  buffer[frame] = sin((float)(frame)/10);
+                  float totalFrames = (float)(data->frame++);
+                  buffer[frame] = amplitude * sin( frequency * 2 * M_PI * totalFrames / SAMPLE_RATE);
               }
               return paContinue; /* 0 == continue */
 }
 
-int main()
+
+void PlayNote(float frequency, float amplitude, float time)
 {
-   // setup
-   Pa_Initialize();
+   // 1000ms@440Hz
+   struct StreamCallbackData data = {0};
+   data.frequency = frequency;
+   data.amplitude = amplitude;
 
    // create stream
    PaStream * stream;
@@ -33,16 +51,25 @@ int main()
                     SAMPLE_RATE,      /* sample rate */
                     FRAMES_PER_BUFFER,/* frames per buffer */
                     streamCallback,   /* user-defined callback function */
-                    0                 /* user-defined callback argument */
+                    &data             /* user-defined callback argument */
    );
 
    // start the stream
    Pa_StartStream(stream);
-
-  // Pa_Sleep(10000);
-
-   // wait for the stream to finish
+   Pa_Sleep(time);
    Pa_StopStream(stream);
+}
+
+int main()
+{
+
+   // setup
+   Pa_Initialize();
+
+   PlayNote(440.0, 0.5, 100.0); 
+   PlayNote(540.0, 1.0, 100.0); 
+   PlayNote(640.0, 1.5, 100.0); 
+   PlayNote(740.0, 2.0, 100.0); 
 
     // teardown
    Pa_Terminate();
