@@ -20,6 +20,17 @@ typedef struct trybloop_note_active
   int frame;
 } trybloop_note_active;
 
+
+/* a sine waveform */
+static float trybloop_note_getframe_sine(trybloop_note_active *active)
+{
+   float amplitude = active->note.amplitude;
+   float frequency = active->note.frequency;
+   int frame = active->frame;
+   return amplitude *
+            sin( frequency * 2 * M_PI * frame / SAMPLE_RATE);
+}
+
 /* gets called to fill a sound device's buffer with audio samples (frames) */
 /* our buffer consists of 512 frames, and each frame is a float32 */
 static int trybloop_note_active_callback(
@@ -32,20 +43,19 @@ static int trybloop_note_active_callback(
 { 
        /* get properties of the active note */
        trybloop_note_active* activeNote = (trybloop_note_active*)(data);
-       float frequency = activeNote->note.frequency;
-       float amplitude = activeNote->note.amplitude;
 
-       /*  draw a sine wave in buffer using the properties of the active note */
+       /*  draw the waveform into the buffer using the properties of the active note */
        float *buffer = (float*)outputBuffer; 
        for(int frame = 0; frame < framesPerBuffer; frame++)
        {
-           buffer[frame] = amplitude *
-                sin( frequency * 2 * M_PI * activeNote->frame / SAMPLE_RATE);
+           buffer[frame] = trybloop_note_getframe_sine(activeNote);
 //printf("freq %f amp %f frame %d buffer %f\n", frequency,amplitude,activeNote->frame,buffer[frame]);
            activeNote->frame++;
        }
        return paContinue; /* 0 == continue */
 }
+
+
 
 static void trybloop_note_play(trybloop_note_active* activenote)
 {
