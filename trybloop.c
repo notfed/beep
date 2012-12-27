@@ -69,15 +69,23 @@ static void trybloop_note_play(trybloop_note_active* activenote)
 int main(int argc, char *argv[])
 {
 
+
+   int freq = 0;
+   if(argc != 2 || sscanf(argv[1],"%d",&freq)<0)
+   {
+       printf("trybloop: error: usage: trybloop freq\n");
+       _exit(1);
+   }
+
    // setup
    Pa_Initialize();
 
    // set up a note to play
    trybloop_note_active active;
    active.frame = 0;
-   active.note.frequency = 440.0;
+   active.note.frequency = freq;
    active.note.amplitude = 1.0;
-   active.note.duration = 10000;
+   active.note.duration = 1000;
 
    // play the note
    trybloop_note_play(&active);
