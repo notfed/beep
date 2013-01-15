@@ -1,5 +1,6 @@
 #include <portaudio.h>
 #include <math.h>
+#include <stdio.h>
 
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 512
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
    if(argc != 2 || sscanf(argv[1],"%d",&freq)<0)
    {
        printf("trybloop: error: usage: trybloop freq\n");
-       _exit(1);
+       return 1;
    }
 
    /* setup */
