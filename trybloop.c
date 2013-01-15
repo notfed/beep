@@ -4,9 +4,10 @@
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 512
 
-
-/* represents a function that can create a waveform */
+/* describes an actively playing note */
 struct trybloop_note_active;
+
+/* "trybloop_waveform" represents a function that can create a waveform */
 typedef float (*trybloop_waveform)(struct trybloop_note_active*);
 
 /* describes all of the characteristics of a playable note */
@@ -43,15 +44,15 @@ static int trybloop_note_active_callback(
 	void *data)
 { 
        /* get properties of the active note */
-       trybloop_note_active* activeNote = (trybloop_note_active*)(data);
+       trybloop_note_active* active = (trybloop_note_active*)(data);
 
        /*  draw the waveform into the buffer using the properties of the active note */
        float *buffer = (float*)outputBuffer; 
        for(int frame = 0; frame < framesPerBuffer; frame++)
        {
-           buffer[frame] = activeNote->note.waveform(activeNote);
-//printf("freq %f amp %f frame %d buffer %f\n", frequency,amplitude,activeNote->frame,buffer[frame]);
-           activeNote->frame++;
+           buffer[frame] = active->note.waveform(active);
+/* printf("freq %f amp %f frame %d buffer %f\n", frequency,amplitude,active->frame,buffer[frame]); */
+           active->frame++;
        }
        return paContinue; /* 0 == continue */
 }
@@ -60,7 +61,7 @@ static int trybloop_note_active_callback(
 
 static void trybloop_note_play(trybloop_note_active* activenote)
 {
-   // create stream
+   /* create stream */
    PaStream * stream;
    Pa_OpenDefaultStream(
 	&stream,          /* result stream */
@@ -72,7 +73,7 @@ static void trybloop_note_play(trybloop_note_active* activenote)
         activenote       /* user-defined callback argument */
    );
 
-   // start the stream
+   /* start the stream */
    Pa_StartStream(stream);
 }
 
@@ -85,10 +86,10 @@ int main(int argc, char *argv[])
        _exit(1);
    }
 
-   // setup
+   /* setup */
    Pa_Initialize();
 
-   // set up a note to play
+   /* set up a note to play */
    trybloop_note_active active;
    active.frame = 0;
    active.note.frequency = freq;
@@ -96,12 +97,12 @@ int main(int argc, char *argv[])
    active.note.duration = 1000;
    active.note.waveform = trybloop_note_getframe_sine;
 
-   // play the note
+   /* play the note */
    trybloop_note_play(&active);
 
-   // wait for the specified duration
+   /* wait for the specified duration */
    Pa_Sleep(active.note.duration);
 
-    // teardown
+    /* teardown */
    Pa_Terminate();
 }
