@@ -1,8 +1,8 @@
-trybloop
+#trybloop
 
 A simple note-playing program using PortAudio, written in C.    Public Domain.
 
-Prerequisites
+#Prerequisites
 
 You must have [portaudio](http://www.portaudio.com/).  On Ubuntu this can be installed by running something like:
 
@@ -10,7 +10,7 @@ You must have [portaudio](http://www.portaudio.com/).  On Ubuntu this can be ins
 
 Otherwise see [portaudio's website](http://www.portaudio.com/).
 
-Usage
+#Usage
 
 To download and complile:
 
