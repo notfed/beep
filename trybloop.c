@@ -80,8 +80,8 @@ static void trybloop_note_play(trybloop_note_active* activenote)
 
 int main(int argc, char *argv[])
 {
-   int freq = 0;
-   if(argc != 2 || sscanf(argv[1],"%d",&freq)<0)
+   float freq = 0;
+   if(argc != 2 || sscanf(argv[1],"%f",&freq)<0)
    {
        printf("trybloop: error: usage: trybloop freq\n");
        return 1;
