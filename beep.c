@@ -28,7 +28,7 @@ typedef struct beep_note_active
 } beep_note_active;
 
 /* a sine waveform */
-static float beep_note_getframe_sine(beep_note_active *active)
+static float beep_waveform_sine(beep_note_active *active)
 {
    beep_note *note = &active->note;
    return note->amplitude * sin( note->frequency * 2 * M_PI * active->frame / SAMPLE_RATE);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
    active.note.frequency = freq;
    active.note.amplitude = 1.0;
    active.note.duration = 1000;
-   active.note.waveform = beep_note_getframe_sine;
+   active.note.waveform = beep_waveform_sine;
 
    /* play the note */
    beep_note_play(&active);
