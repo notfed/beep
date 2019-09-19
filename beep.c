@@ -5,13 +5,13 @@
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 512
 
-/* describes an actively playing note */
+/* A "beep_note_active" represents an actively playing note */
 struct beep_note_active;
 
-/* "beep_waveform" represents a function that can create a waveform */
+/* A "beep_waveform" function is a function that can generate a waveform */
 typedef float (*beep_waveform)(struct beep_note_active*);
 
-/* describes all of the characteristics of a playable note */
+/* A "beep_note" represents a playable note */
 typedef struct beep_note
 {
   float frequency;
@@ -20,22 +20,21 @@ typedef struct beep_note
   beep_waveform waveform;
 } beep_note;
 
-/* describes an actively playing note */
+/* A "beep_note_active" represents an actively playing note */
 typedef struct beep_note_active 
 {
   beep_note note;
   int frame;
 } beep_note_active;
 
-/* a sine waveform */
+/* Generates a sine waveform */
 static float beep_waveform_sine(beep_note_active *active)
 {
    beep_note *note = &active->note;
    return note->amplitude * sin( note->frequency * 2 * M_PI * active->frame / SAMPLE_RATE);
 }
 
-/* gets called to fill a sound device's buffer with audio samples (frames) */
-/* our buffer consists of 512 frames, and each frame is a float32 */
+/* The following callback is called repeatedly by PortAudio to fill a sound device's buffer with audio samples (frames).  We've defined our buffer to consist of 512 frames, and each frame is simply a float32. */
 static int beep_note_active_callback(
 	const void *inputBuffer,
 	void *outputBuffer, 
