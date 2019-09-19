@@ -1,4 +1,4 @@
-trybloop : trybloop.o
-	cc -o trybloop trybloop.o -lportaudio -lm
-trybloop.o : trybloop.c
-	cc -c trybloop.c
+beep : beep.o
+	cc -o beep beep.o -lportaudio -lm
+beep.o : beep.c
+	cc -c beep.c

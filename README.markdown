@@ -1,4 +1,4 @@
-#trybloop
+#beep
 
 A simple note-playing program using PortAudio, written in C.    Public Domain.
 
@@ -14,10 +14,10 @@ Otherwise see [portaudio's website](http://www.portaudio.com/).
 
 To download and complile:
 
-    git clone git@github.com:notfed/trybloop.git trybloop
-    cd trybloop
+    git clone git@github.com:notfed/beep.git beep
+    cd beep
     make
 
 To play a 440Hz sine wave, run 
 
-    ./trybloop 440
+    ./beep 440

@@ -6,37 +6,37 @@
 #define FRAMES_PER_BUFFER 512
 
 /* describes an actively playing note */
-struct trybloop_note_active;
+struct beep_note_active;
 
-/* "trybloop_waveform" represents a function that can create a waveform */
-typedef float (*trybloop_waveform)(struct trybloop_note_active*);
+/* "beep_waveform" represents a function that can create a waveform */
+typedef float (*beep_waveform)(struct beep_note_active*);
 
 /* describes all of the characteristics of a playable note */
-typedef struct trybloop_note
+typedef struct beep_note
 {
   float frequency;
   float amplitude;
   float duration;
-  trybloop_waveform waveform;
-} trybloop_note;
+  beep_waveform waveform;
+} beep_note;
 
 /* describes an actively playing note */
-typedef struct trybloop_note_active 
+typedef struct beep_note_active 
 {
-  trybloop_note note;
+  beep_note note;
   int frame;
-} trybloop_note_active;
+} beep_note_active;
 
 /* a sine waveform */
-static float trybloop_note_getframe_sine(trybloop_note_active *active)
+static float beep_note_getframe_sine(beep_note_active *active)
 {
-   trybloop_note *note = &active->note;
+   beep_note *note = &active->note;
    return note->amplitude * sin( note->frequency * 2 * M_PI * active->frame / SAMPLE_RATE);
 }
 
 /* gets called to fill a sound device's buffer with audio samples (frames) */
 /* our buffer consists of 512 frames, and each frame is a float32 */
-static int trybloop_note_active_callback(
+static int beep_note_active_callback(
 	const void *inputBuffer,
 	void *outputBuffer, 
 	unsigned long framesPerBuffer,
@@ -45,7 +45,7 @@ static int trybloop_note_active_callback(
 	void *data)
 { 
        /* get properties of the active note */
-       trybloop_note_active* active = (trybloop_note_active*)(data);
+       beep_note_active* active = (beep_note_active*)(data);
 
        /*  draw the waveform into the buffer using the properties of the active note */
        float *buffer = (float*)outputBuffer; 
@@ -60,7 +60,7 @@ static int trybloop_note_active_callback(
 
 
 
-static void trybloop_note_play(trybloop_note_active* activenote)
+static void beep_note_play(beep_note_active* activenote)
 {
    /* create stream */
    PaStream * stream;
@@ -70,7 +70,7 @@ static void trybloop_note_play(trybloop_note_active* activenote)
         paFloat32,        /* sample format */
         SAMPLE_RATE,      /* sample rate */
         FRAMES_PER_BUFFER,/* frames per buffer */
-        trybloop_note_active_callback,   /* user-defined callback function */
+        beep_note_active_callback,   /* user-defined callback function */
         activenote       /* user-defined callback argument */
    );
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
    float freq = 0;
    if(argc != 2 || sscanf(argv[1],"%f",&freq)<0)
    {
-       printf("trybloop: error: usage: trybloop freq\n");
+       printf("beep: error: usage: beep freq\n");
        return 1;
    }
 
@@ -91,15 +91,15 @@ int main(int argc, char *argv[])
    Pa_Initialize();
 
    /* set up a note to play */
-   trybloop_note_active active;
+   beep_note_active active;
    active.frame = 0;
    active.note.frequency = freq;
    active.note.amplitude = 1.0;
    active.note.duration = 1000;
-   active.note.waveform = trybloop_note_getframe_sine;
+   active.note.waveform = beep_note_getframe_sine;
 
    /* play the note */
-   trybloop_note_play(&active);
+   beep_note_play(&active);
 
    /* wait for the specified duration */
    Pa_Sleep(active.note.duration);
