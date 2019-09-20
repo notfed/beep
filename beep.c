@@ -31,7 +31,7 @@ typedef struct beep_note_active
 static float beep_waveform_sine(beep_note_active *active)
 {
    beep_note *note = &active->note;
-   return note->amplitude * sin( note->frequency * 2 * M_PI * active->frame / SAMPLE_RATE);
+   return note->amplitude * sin(2 * M_PI * note->frequency * active->frame / SAMPLE_RATE);
 }
 
 /* The following callback is called repeatedly by PortAudio to fill a sound device's buffer with audio samples (frames).  We've defined our buffer to consist of 512 frames, and each frame is simply a float32. */
