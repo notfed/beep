@@ -5,11 +5,11 @@
 #define SAMPLE_RATE 44100
 #define FRAMES_PER_BUFFER 512
 
-/* A "beep_note_active" represents an actively playing note */
-struct beep_note_active;
+/* A "beep_head" represents an actively playing stream of audio */
+struct beep_head;
 
 /* A "beep_waveform" function is a function that can generate a waveform */
-typedef float (*beep_waveform)(struct beep_note_active*);
+typedef float (*beep_waveform)(struct beep_head*);
 
 /* A "beep_note" represents a playable note */
 typedef struct beep_note
@@ -20,22 +20,32 @@ typedef struct beep_note
   beep_waveform waveform;
 } beep_note;
 
-/* A "beep_note_active" represents an actively playing note */
-typedef struct beep_note_active 
+/* A "beep_head" represents an actively playing stream of audio */
+typedef struct beep_head 
 {
-  beep_note note;
+  beep_note* note;
   int frame;
-} beep_note_active;
+} beep_head;
 
 /* Generates a sine waveform */
-static float beep_waveform_sine(beep_note_active *active)
+static float beep_waveform_sine(beep_head *head)
 {
-   beep_note *note = &active->note;
-   return note->amplitude * sin(2 * M_PI * note->frequency * active->frame / SAMPLE_RATE);
+   beep_note *note = head->note;
+   return note->amplitude * sin(2 * M_PI * note->frequency * head->frame / SAMPLE_RATE);
+}
+
+/* initialize PortAudio */
+static void portaudio_init() {
+    Pa_Initialize();
+}
+
+/* teardown PortAudio */
+static void portaudio_teardown() {
+    Pa_Terminate();
 }
 
 /* The following callback is called repeatedly by PortAudio to fill a sound device's buffer with audio samples (frames).  We've defined our buffer to consist of 512 frames, and each frame is simply a float32. */
-static int beep_note_active_callback(
+static int beep_head_callback(
 	const void *inputBuffer,
 	void *outputBuffer, 
 	unsigned long framesPerBuffer,
@@ -43,66 +53,73 @@ static int beep_note_active_callback(
 	PaStreamCallbackFlags statusFlags,
 	void *data)
 { 
-       /* get properties of the active note */
-       beep_note_active* active = (beep_note_active*)(data);
+       /* get the active head */
+       beep_head* head = (beep_head*)(data);
 
-       /*  draw the waveform into the buffer using the properties of the active note */
+       /*  draw the waveform into the buffer using the properties of the active head */
        float *buffer = (float*)outputBuffer; 
        for(int frame = 0; frame < framesPerBuffer; frame++)
        {
-           buffer[frame] = active->note.waveform(active);
-/* printf("freq %f amp %f frame %d buffer %f\n", frequency,amplitude,active->frame,buffer[frame]); */
-           active->frame++;
+           buffer[frame] = head->note->waveform(head);
+/* printf("freq %f amp %f frame %d buffer %f\n", frequency,amplitude,head->frame,buffer[frame]); */
+           head->frame++;
        }
        return paContinue; /* 0 == continue */
 }
 
-
-
-static void beep_note_play(beep_note_active* activenote)
+static void beep_note_play(beep_note* note)
 {
-   /* create stream */
-   PaStream * stream;
-   Pa_OpenDefaultStream(
-	&stream,          /* result stream */
+    /* start a new tape head at frame 0 */
+    beep_head head = {
+        .frame = 0,
+        .note = note
+    };
+
+    /* create a PortAudio stream */
+    PaStream * stream;
+    Pa_OpenDefaultStream(
+    &stream,          /* result stream */
         0, 1,             /* # input channels, # output channels */
         paFloat32,        /* sample format */
         SAMPLE_RATE,      /* sample rate */
         FRAMES_PER_BUFFER,/* frames per buffer */
-        beep_note_active_callback,   /* user-defined callback function */
-        activenote       /* user-defined callback argument */
-   );
+        beep_head_callback,   /* user-defined callback function */
+        &head              /* user-defined callback argument */
+    );
 
-   /* start the stream */
-   Pa_StartStream(stream);
+    /* start the PortAudio stream */
+    Pa_StartStream(stream);
+
+    /* wait for the specified duration */
+    Pa_Sleep(note->duration);
+
+    /* stop the PortAudio stream */
+    Pa_AbortStream(stream);
 }
 
 int main(int argc, char *argv[])
 {
-   float freq = 0;
-   if(argc != 2 || sscanf(argv[1],"%f",&freq)<0)
-   {
+    float freq = 0;
+    if(argc != 2 || sscanf(argv[1],"%f",&freq)<0)
+    {
        printf("beep: error: usage: beep freq\n");
        return 1;
-   }
+    }
 
-   /* setup */
-   Pa_Initialize();
+    /* initialize PortAudio */
+    portaudio_init();
 
-   /* set up a note to play */
-   beep_note_active active;
-   active.frame = 0;
-   active.note.frequency = freq;
-   active.note.amplitude = 1.0;
-   active.note.duration = 1000;
-   active.note.waveform = beep_waveform_sine;
+    /* set up a note to play */
+    beep_note note = {
+       .frequency = freq,
+       .amplitude = 1.0,
+       .duration = 1000,
+       .waveform = beep_waveform_sine
+    };
 
-   /* play the note */
-   beep_note_play(&active);
+    /* play the note */
+    beep_note_play(&note);
 
-   /* wait for the specified duration */
-   Pa_Sleep(active.note.duration);
-
-    /* teardown */
-   Pa_Terminate();
+    /* teardown PortAudio */
+    portaudio_teardown();
 }
